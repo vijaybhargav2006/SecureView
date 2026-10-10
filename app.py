@@ -1,8 +1,9 @@
 
 import streamlit as st
 from google.cloud import bigquery
-from google.auth.exceptions import DefaultCredentialsError
+from google.oauth2 import service_account
 from google.api_core.exceptions import Forbidden, GoogleAPICallError
+
 
 st.set_page_config(
     page_title="SecureView | BigQuery Access Control",
@@ -30,9 +31,18 @@ with st.sidebar:
         "does not grant permission to its data."
     )
 
+
 @st.cache_resource
 def get_client():
-    return bigquery.Client(project=PROJECT_ID)
+    credentials_info = dict(st.secrets["gcp_service_account"])
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info
+    )
+    return bigquery.Client(
+        project=PROJECT_ID,
+        credentials=credentials,
+    )
+
 
 try:
     client = get_client()
